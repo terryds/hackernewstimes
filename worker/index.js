@@ -224,6 +224,27 @@ export default {
       return handleUnsubscribe(request, env)
     }
 
+    // Check if a URL can be embedded in an iframe
+    if (url.pathname === '/api/check-embeddable') {
+      const targetUrl = url.searchParams.get('url')
+      if (!targetUrl) return json({ error: 'url param required' }, 400)
+      try {
+        const res = await fetch(targetUrl, {
+          method: 'GET',
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HackerNewsTimes/1.0)' },
+          redirect: 'follow',
+        })
+        const xfo = res.headers.get('x-frame-options') || ''
+        const csp = res.headers.get('content-security-policy') || ''
+        const blocked = xfo.toLowerCase() === 'deny'
+          || xfo.toLowerCase() === 'sameorigin'
+          || csp.includes('frame-ancestors')
+        return json({ embeddable: !blocked })
+      } catch {
+        return json({ embeddable: true }) // assume embeddable if we can't check
+      }
+    }
+
     // Proxy endpoint: fetch a URL server-side and return HTML for client-side Readability parsing
     if (url.pathname === '/api/extract') {
       const targetUrl = url.searchParams.get('url')

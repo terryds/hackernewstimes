@@ -192,11 +192,25 @@ export default function StoryModal({ story, onClose }) {
   const domain = getDomain(story.url)
   const storyUrl = story.url || `https://news.ycombinator.com/item?id=${story.id}`
   const hnUrl = `https://news.ycombinator.com/item?id=${story.id}`
-  const blocked = isDomainBlocked(domain)
+  const [blocked, setBlocked] = useState(isDomainBlocked(domain))
 
   const [activeTab, setActiveTab] = useState(
     !story.url ? 'comments' : blocked ? 'reader' : 'article'
   )
+
+  // For non-blocklisted domains, check server-side if iframe is allowed
+  useEffect(() => {
+    if (!story.url || blocked) return
+    fetch(`/api/check-embeddable?url=${encodeURIComponent(storyUrl)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.embeddable) {
+          setBlocked(true)
+          setActiveTab('reader')
+        }
+      })
+      .catch(() => {})
+  }, [story.url])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
