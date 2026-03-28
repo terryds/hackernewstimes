@@ -7,6 +7,33 @@ import DailyQuote from './components/DailyQuote'
 import { HeroSkeleton, SecondarySkeleton, SidebarSkeleton, HeadlineSkeleton } from './components/Skeleton'
 import { useStories } from './hooks/useStories'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
+import { fetchItem } from './api'
+
+const SECTION_ROUTES = {
+  '/': 'top',
+  '/top': 'top',
+  '/best': 'best',
+  '/new': 'new',
+  '/ask': 'ask',
+  '/show': 'show',
+  '/jobs': 'job',
+}
+
+const SECTION_PATHS = {
+  top: '/',
+  best: '/best',
+  new: '/new',
+  ask: '/ask',
+  show: '/show',
+  job: '/jobs',
+}
+
+function getInitialRoute() {
+  const path = window.location.pathname
+  const storyMatch = path.match(/^\/story\/(\d+)$/)
+  if (storyMatch) return { section: 'top', storyId: storyMatch[1] }
+  return { section: SECTION_ROUTES[path] || 'top', storyId: null }
+}
 
 
 function InstallBanner({ onInstall, onDismiss, isIOSSafari }) {
@@ -62,7 +89,8 @@ function EditionBanner({ section, total }) {
 }
 
 export default function App() {
-  const [section, setSection] = useState('top')
+  const initialRoute = getInitialRoute()
+  const [section, setSection] = useState(initialRoute.section)
   const [selectedStory, setSelectedStory] = useState(null)
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const { stories, loading, loadingMore, hasMore, loadMore } = useStories(section)
@@ -80,8 +108,49 @@ export default function App() {
     localStorage.setItem('theme', darkMode ? 'dark' : 'light')
   }, [darkMode])
 
+  // Load story from URL on initial mount (e.g. /story/12345)
+  useEffect(() => {
+    if (initialRoute.storyId) {
+      fetchItem(initialRoute.storyId).then((story) => {
+        if (story) setSelectedStory(story)
+      })
+    }
+  }, [])
+
+  // Update URL when section changes
+  const handleSectionChange = useCallback((newSection) => {
+    setSection(newSection)
+    history.pushState(null, '', SECTION_PATHS[newSection] || '/')
+  }, [])
+
+  // Update URL when story opens/closes
   const handleStoryClick = useCallback((story) => {
     setSelectedStory(story)
+    history.pushState({ storyId: story.id }, '', `/story/${story.id}`)
+  }, [])
+
+  const handleStoryClose = useCallback(() => {
+    setSelectedStory(null)
+    history.pushState(null, '', SECTION_PATHS[section] || '/')
+  }, [section])
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname
+      const storyMatch = path.match(/^\/story\/(\d+)$/)
+      if (storyMatch) {
+        fetchItem(storyMatch[1]).then((story) => {
+          if (story) setSelectedStory(story)
+        })
+      } else {
+        setSelectedStory(null)
+        const newSection = SECTION_ROUTES[path] || 'top'
+        setSection(newSection)
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   // Split stories into layout groups
@@ -95,7 +164,7 @@ export default function App() {
       <div className="max-w-7xl mx-auto">
         <Masthead
           section={section}
-          onSectionChange={setSection}
+          onSectionChange={handleSectionChange}
           onInstall={install}
           isInstallable={isInstallable}
           darkMode={darkMode}
@@ -215,7 +284,7 @@ export default function App() {
 
       {/* Story Modal */}
       {selectedStory && (
-        <StoryModal story={selectedStory} onClose={() => setSelectedStory(null)} />
+        <StoryModal story={selectedStory} onClose={handleStoryClose} />
       )}
 
       {/* Install banner - bottom sticky */}
