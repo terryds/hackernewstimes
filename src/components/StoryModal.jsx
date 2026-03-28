@@ -2,10 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Readability } from '@mozilla/readability'
 import { fetchComments, getDomain, timeAgo } from '../api'
 
-// Auto-link plain URLs that aren't already inside an <a> tag
+// Decode HTML entities (HN API encodes / as &#x2F; etc.) then auto-link plain URLs
 function autoLinkUrls(html) {
-  return html.replace(
-    /(?<![">])(https?:\/\/[^\s<]+)/g,
+  // First decode HTML entities so URLs like https:&#x2F;&#x2F;... become https://...
+  const decoded = html.replace(/&#x2F;/g, '/').replace(/&#x27;/g, "'").replace(/&amp;/g, '&')
+  // Then auto-link URLs that aren't already inside an <a> tag
+  return decoded.replace(
+    /(?<!["'>])(https?:\/\/[^\s<]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
   )
 }
