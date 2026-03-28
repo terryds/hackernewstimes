@@ -214,12 +214,14 @@ export default function StoryModal({ story, onClose }) {
   }, [onClose])
 
   const commentsContent = (
-    <div className="p-4 md:p-6 overflow-hidden">
+    <div className="p-4 md:p-8 lg:p-12 overflow-hidden max-w-4xl mx-auto">
       {story.text && (
-        <div
-          className="max-w-prose mb-6 font-body text-sm leading-relaxed text-ink-light border-b border-rule-light pb-4 prose-a:text-accent prose-a:underline prose-a:break-all"
-          dangerouslySetInnerHTML={{ __html: autoLinkUrls(story.text) }}
-        />
+        <div className="mb-8 pb-8 border-b-2 border-rule">
+          <div
+            className="max-w-2xl font-body text-base md:text-lg leading-relaxed text-ink prose-a:text-accent prose-a:underline prose-a:underline-offset-2 prose-a:break-all [&_p]:mb-4"
+            dangerouslySetInnerHTML={{ __html: autoLinkUrls(story.text) }}
+          />
+        </div>
       )}
 
       <h3 className="font-headline text-base font-bold text-ink mb-3 border-b border-rule-light pb-2">
