@@ -88,22 +88,21 @@ function Comment({ comment, depth = 0 }) {
 function ReaderView({ url, domain }) {
   const [article, setArticle] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [useProxy, setUseProxy] = useState(false) // fallback to Webfuse proxy
 
   useEffect(() => {
     setLoading(true)
-    setError(null)
+    setUseProxy(false)
+    setArticle(null)
 
     fetch(`/api/extract?url=${encodeURIComponent(url)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) throw new Error(data.error)
 
-        // Parse with Readability in the browser using DOMParser
         const parser = new DOMParser()
         const doc = parser.parseFromString(data.html, 'text/html')
 
-        // Fix relative URLs to absolute
         const base = doc.createElement('base')
         base.href = data.url
         doc.head.prepend(base)
@@ -112,9 +111,13 @@ function ReaderView({ url, domain }) {
         if (!parsed) throw new Error('Could not extract article')
 
         setArticle(parsed)
+        setLoading(false)
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+      .catch(() => {
+        // Extraction failed — fall back to Webfuse proxy iframe
+        setUseProxy(true)
+        setLoading(false)
+      })
   }, [url])
 
   if (loading) {
@@ -132,7 +135,20 @@ function ReaderView({ url, domain }) {
     )
   }
 
-  if (error || !article) {
+  // Fallback: load via Webfuse proxy iframe
+  if (useProxy) {
+    const proxyUrl = `https://demo.webfuse.com/+iframetest/?url=${encodeURIComponent(url)}`
+    return (
+      <iframe
+        src={proxyUrl}
+        className="flex-1 w-full h-full bg-white"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+        title={`${domain} (via proxy)`}
+      />
+    )
+  }
+
+  if (!article) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <p className="font-garamond text-base text-ink-muted mb-1">
