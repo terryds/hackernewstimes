@@ -3,6 +3,8 @@ import { sendEmail, welcomeEmail } from './email.js'
 import { fetchBestStories } from './hn.js'
 import { buildNewsletterHtml } from './template.js'
 
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -231,7 +233,7 @@ export default {
       try {
         const res = await fetch(targetUrl, {
           method: 'GET',
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HackerNewsTimes/1.0)' },
+          headers: { 'User-Agent': BROWSER_UA },
           redirect: 'follow',
         })
         const xfo = res.headers.get('x-frame-options') || ''
@@ -251,11 +253,14 @@ export default {
       if (!targetUrl) return json({ error: 'url param required' }, 400)
       try {
         const res = await fetch(targetUrl, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HackerNewsTimes/1.0)' },
+          headers: { 'User-Agent': BROWSER_UA },
           redirect: 'follow',
         })
         if (!res.ok) return json({ error: `HTTP ${res.status}` }, 502)
         const html = await res.text()
+        if (!html || html.length < 100) {
+          return json({ error: `Empty or too small response (${html.length} bytes, status ${res.status})` }, 502)
+        }
         return json({ html, url: targetUrl })
       } catch (err) {
         return json({ error: err.message }, 502)

@@ -136,10 +136,10 @@ function ReaderView({ url, domain }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <p className="font-garamond text-base text-ink-muted mb-1">
-          Could not extract article
+          This article couldn&rsquo;t be loaded here
         </p>
         <p className="font-garamond text-xs text-ink-muted/60 mb-4">
-          {error || 'The article content could not be parsed.'}
+          Some sites have extra protection that prevents extraction. You can read it directly instead.
         </p>
         <a
           href={url}
@@ -285,6 +285,34 @@ export default function StoryModal({ story, onClose }) {
   const [readerTipDismissed, setReaderTipDismissed] = useState(() => localStorage.getItem('reader-tip-dismissed') === 'true')
   const [headerVisible, setHeaderVisible] = useState(true)
   const lastScrollY = useRef(0)
+  const [commentsPanelWidth, setCommentsPanelWidth] = useState(() => {
+    const saved = localStorage.getItem('comments-panel-width')
+    return saved ? parseInt(saved, 10) : 550
+  })
+  const resizing = useRef(false)
+
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault()
+    resizing.current = true
+    const startX = e.clientX
+    const startWidth = commentsPanelWidth
+    let currentWidth = startWidth
+
+    const onMove = (e) => {
+      if (!resizing.current) return
+      const delta = startX - e.clientX
+      currentWidth = Math.max(300, Math.min(800, startWidth + delta))
+      setCommentsPanelWidth(currentWidth)
+    }
+    const onUp = () => {
+      resizing.current = false
+      localStorage.setItem('comments-panel-width', String(currentWidth))
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [commentsPanelWidth])
 
   const handleContentScroll = useCallback((e) => {
     const y = e.target.scrollTop
@@ -431,10 +459,20 @@ export default function StoryModal({ story, onClose }) {
             )}
           </div>
 
+          {/* Drag handle - desktop only */}
+          <div
+            className="hidden lg:flex items-center justify-center w-1.5 cursor-col-resize bg-rule-light/50 hover:bg-accent/30 active:bg-accent/50 transition-colors shrink-0"
+            onMouseDown={handleResizeStart}
+            title="Drag to resize"
+          />
+
           {/* Comments panel */}
-          <div className={`${
-            activeTab === 'comments' ? 'flex' : 'hidden'
-          } lg:flex flex-col w-full lg:w-[420px] xl:w-[480px] min-w-0 lg:shrink-0 min-h-0`}>
+          <div
+            className={`${
+              activeTab === 'comments' ? 'flex' : 'hidden'
+            } lg:flex flex-col w-full min-w-0 lg:shrink-0 min-h-0`}
+            style={{ maxWidth: undefined, width: window.innerWidth >= 1024 ? `${commentsPanelWidth}px` : undefined }}
+          >
             <div className="flex-1 overflow-y-auto" onScroll={handleContentScroll}>
               {commentsContent}
             </div>
