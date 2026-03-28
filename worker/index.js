@@ -184,6 +184,35 @@ async function sendWeeklyNewsletter(env) {
   console.log(`Newsletter: ${sent} sent, ${failed} failed`)
 }
 
+const CACHED_FEEDS = ['topstories', 'beststories']
+
+async function warmFeedCache(feed, url, cache) {
+  const res = await fetch(`https://hacker-news.firebaseio.com/v0/${feed}.json`)
+  if (!res.ok) return json({ error: `HN API error: ${res.status}` }, 502)
+
+  const data = await res.json()
+  const response = new Response(JSON.stringify(data), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 's-maxage=300',
+    },
+  })
+
+  const cacheKey = new Request(url.toString())
+  await cache.put(cacheKey, response.clone())
+  return response
+}
+
+async function warmAllFeeds(env) {
+  const cache = caches.default
+  const siteUrl = env.SITE_URL || 'https://localhost'
+  for (const feed of CACHED_FEEDS) {
+    const url = new URL(`${siteUrl}/api/hn/${feed}`)
+    await warmFeedCache(feed, url, cache)
+    console.log(`Warmed cache: ${feed}`)
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
@@ -195,10 +224,47 @@ export default {
       return handleUnsubscribe(request, env)
     }
 
+    // Proxy endpoint: fetch a URL server-side and return HTML for client-side Readability parsing
+    if (url.pathname === '/api/extract') {
+      const targetUrl = url.searchParams.get('url')
+      if (!targetUrl) return json({ error: 'url param required' }, 400)
+      try {
+        const res = await fetch(targetUrl, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; HackerNewsTimes/1.0)' },
+          redirect: 'follow',
+        })
+        if (!res.ok) return json({ error: `HTTP ${res.status}` }, 502)
+        const html = await res.text()
+        return json({ html, url: targetUrl })
+      } catch (err) {
+        return json({ error: err.message }, 502)
+      }
+    }
+
+    // Cached proxy for HN story IDs (topstories, beststories)
+    const hnMatch = url.pathname.match(/^\/api\/hn\/(topstories|beststories)$/)
+    if (hnMatch) {
+      const feed = hnMatch[1]
+      const cacheKey = new Request(url.toString(), request)
+      const cache = caches.default
+
+      const cached = await cache.match(cacheKey)
+      if (cached) return cached
+
+      return warmFeedCache(feed, url, cache)
+    }
+
     return new Response('Not found', { status: 404 })
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendWeeklyNewsletter(env))
+    const cron = event.cron
+    if (cron === '*/5 * * * *') {
+      // Pre-warm story ID caches every 5 minutes
+      ctx.waitUntil(warmAllFeeds(env))
+    } else {
+      // Tuesday newsletter cron
+      ctx.waitUntil(sendWeeklyNewsletter(env))
+    }
   },
 }

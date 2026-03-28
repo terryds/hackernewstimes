@@ -9,21 +9,26 @@ import { useStories } from './hooks/useStories'
 import { useInstallPrompt } from './hooks/useInstallPrompt'
 
 
-function InstallBanner({ onInstall, onDismiss }) {
+function InstallBanner({ onInstall, onDismiss, isIOSSafari }) {
   return (
-    <div className="bg-ink text-paper px-4 py-3 flex items-center gap-3">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-ink text-paper px-4 py-3 flex items-center gap-3 shadow-[0_-2px_10px_rgba(0,0,0,0.2)]">
       <div className="flex-1 min-w-0">
         <p className="font-headline text-sm font-bold">Get the App</p>
         <p className="font-garamond text-xs text-paper/70 mt-0.5">
-          Install Hacker News Times for a faster, app-like experience
+          {isIOSSafari
+            ? <>Tap <svg className="inline w-3.5 h-3.5 -mt-0.5" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a1 1 0 01-1 1h-1.586l-1.707 1.707a1 1 0 01-1.414 0L7.586 9H6a1 1 0 110-2h2a1 1 0 01.707.293L10 8.586l1.293-1.293A1 1 0 0112 7h2a1 1 0 011 1z"/><path d="M10 2a1 1 0 011 1v5.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 111.414-1.414L9 8.586V3a1 1 0 011-1z"/><path d="M3 14a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/></svg> then &ldquo;Add to Home Screen&rdquo;</>
+            : 'Install Hacker News Times for a faster, app-like experience'
+          }
         </p>
       </div>
-      <button
-        onClick={onInstall}
-        className="shrink-0 px-3 py-1.5 text-xs font-garamond font-semibold bg-paper text-ink rounded cursor-pointer hover:bg-paper-dark transition-colors"
-      >
-        Install
-      </button>
+      {!isIOSSafari && (
+        <button
+          onClick={onInstall}
+          className="shrink-0 px-3 py-1.5 text-xs font-garamond font-semibold bg-paper text-ink rounded cursor-pointer hover:bg-paper-dark transition-colors"
+        >
+          Install
+        </button>
+      )}
       <button
         onClick={onDismiss}
         className="shrink-0 p-1 text-paper/50 hover:text-paper cursor-pointer transition-colors"
@@ -61,7 +66,7 @@ export default function App() {
   const [selectedStory, setSelectedStory] = useState(null)
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const { stories, loading, loadingMore, hasMore, loadMore } = useStories(section)
-  const { isInstallable, install } = useInstallPrompt()
+  const { isInstallable, isIOSSafari, install } = useInstallPrompt()
   const [bannerDismissed, setBannerDismissed] = useState(() => localStorage.getItem('install-banner-dismissed') === 'true')
   const showInstallBanner = isInstallable && !bannerDismissed
 
@@ -87,9 +92,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-paper">
-      {showInstallBanner && (
-        <InstallBanner onInstall={install} onDismiss={dismissBanner} />
-      )}
       <div className="max-w-7xl mx-auto">
         <Masthead
           section={section}
@@ -214,6 +216,11 @@ export default function App() {
       {/* Story Modal */}
       {selectedStory && (
         <StoryModal story={selectedStory} onClose={() => setSelectedStory(null)} />
+      )}
+
+      {/* Install banner - bottom sticky */}
+      {showInstallBanner && (
+        <InstallBanner onInstall={install} onDismiss={dismissBanner} isIOSSafari={isIOSSafari} />
       )}
     </div>
   )

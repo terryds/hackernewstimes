@@ -64,6 +64,17 @@ export default defineConfig({
               },
             },
           },
+          {
+            urlPattern: /\/api\/extract\?url=.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'article-extract-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24,
+              },
+            },
+          },
         ],
       },
     }),

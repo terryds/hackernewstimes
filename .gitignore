@@ -12,10 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Cloudflare config (contains personal KV IDs, emails, etc.)
-wrangler.toml
-.dev.vars
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -26,4 +22,6 @@ wrangler.toml
 *.njsproj
 *.sln
 *.sw?
+
+*.code-workspace
 .claude/

@@ -14,11 +14,15 @@ async function fetchJSON(url) {
   return data
 }
 
+const CACHED_FEEDS = { top: 'topstories', best: 'beststories' }
+
 export async function fetchStoryIds(type = 'top') {
+  // Use our cached proxy for top/best, direct Firebase for the rest
+  if (CACHED_FEEDS[type]) {
+    return fetchJSON(`/api/hn/${CACHED_FEEDS[type]}`)
+  }
   const endpoint = {
-    top: 'topstories',
     new: 'newstories',
-    best: 'beststories',
     ask: 'askstories',
     show: 'showstories',
     job: 'jobstories',

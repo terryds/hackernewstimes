@@ -126,10 +126,17 @@ Your app will be available at `https://hackernews-newspaper.<your-subdomain>.wor
 - Dark mode with toggle switch
 - PWA installable (works offline)
 - Full article reader with iframe + comments side-by-side
+- **Reader mode** for sites that block iframes (Substack, Medium, BBC, GitHub, etc.)
 - OG image thumbnails for stories
 - Daily motivational quote
 - Weekly newsletter with timezone-aware delivery
 - 6 content sections: Front Page, Best, Latest, Ask HN, Show HN, Jobs
+
+## Reader Mode
+
+Many sites block iframe embedding (via `X-Frame-Options` or CSP headers), which results in a blank page. For these sites, the app automatically switches to **Reader Mode** — the article is fetched server-side via the Cloudflare Worker (`/api/extract`), parsed with [Mozilla Readability](https://github.com/mozilla/readability) in the browser, and displayed in a clean, newspaper-styled reading view.
+
+A blocklist of known iframe-blocking domains is maintained in `src/components/StoryModal.jsx`. For non-blocked domains, the iframe loads as normal, with a "Reader view" toggle available in the toolbar.
 
 ## Newsletter
 
