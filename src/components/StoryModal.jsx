@@ -42,6 +42,7 @@ const IFRAME_BLOCKLIST = [
   'nature.com',
   'science.org',
   'derekthompson.org',
+  'phys.org',
 ]
 
 function isDomainBlocked(domain) {
