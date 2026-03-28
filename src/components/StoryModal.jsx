@@ -43,6 +43,7 @@ const IFRAME_BLOCKLIST = [
   'science.org',
   'derekthompson.org',
   'phys.org',
+  'pcworld.com',
 ]
 
 function isDomainBlocked(domain) {
