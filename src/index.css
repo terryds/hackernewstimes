@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@theme {
+  --font-masthead: "DM Serif Display", serif;
+  --font-headline: "Playfair Display", serif;
+  --font-body: "Lora", Georgia, serif;
+  --font-garamond: "EB Garamond", Georgia, serif;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-paper: #f5f0e8;
+  --color-paper-dark: #e8e0d0;
+  --color-ink: #1a1a1a;
+  --color-ink-light: #4a4a4a;
+  --color-ink-muted: #6b6b5e;
+  --color-rule: #2a2a2a;
+  --color-rule-light: #c5bfb3;
+  --color-accent: #8b0000;
+  --color-accent-hover: #a00000;
+  --color-highlight: #fff8dc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html[data-theme="dark"] {
+  --color-paper: #1a1a1a;
+  --color-paper-dark: #2a2a2a;
+  --color-ink: #e8e0d0;
+  --color-ink-light: #c5bfb3;
+  --color-ink-muted: #9a9a8a;
+  --color-rule: #e8e0d0;
+  --color-rule-light: #4a4a4a;
+  --color-accent: #ff4444;
+  --color-accent-hover: #ff6666;
+  --color-highlight: #2a2a1a;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Use system sans-serif for body/meta/headline text for better readability */
+.font-garamond,
+.font-body,
+.font-headline {
+  font-family: var(--font-sans) !important;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+}
+
+/* Newspaper texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+html[data-theme="dark"] body::before {
+  opacity: 0.015;
+}
+
+html[data-theme="dark"] iframe {
+  background: #2a2a2a;
+}
+
+/* Drop cap for first article */
+.drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-headline);
+  font-size: 4.5em;
+  line-height: 0.8;
+  padding-right: 0.08em;
+  padding-top: 0.06em;
+  font-weight: 900;
+  color: var(--color-ink);
+}
+
+/* Column rule for multi-column layouts */
+.newspaper-columns {
+  column-rule: 1px solid var(--color-rule-light);
+  column-gap: 2rem;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule-light);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
+
+/* Skeleton animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-paper-dark) 25%, var(--color-paper) 50%, var(--color-paper-dark) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Print styles */
+@media print {
+  body::before { display: none; }
+  .no-print { display: none !important; }
+}

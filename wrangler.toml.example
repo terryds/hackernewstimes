@@ -1,0 +1,22 @@
+name = "hackernews-newspaper"
+main = "worker/index.js"
+compatibility_date = "2025-04-01"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[triggers]
+crons = ["0 * * * 2"]  # Every hour on Tuesday — sends to subscribers whose local time is 10 AM
+
+[[kv_namespaces]]
+binding = "NEWSLETTER_KV"
+id = "<your-kv-namespace-id>"  # Run: npx wrangler kv namespace create NEWSLETTER_KV
+
+[vars]
+FROM_EMAIL = "newsletter@yourdomain.com"
+SITE_URL = "https://your-site.workers.dev"
+NOTIFY_EMAIL = "your@email.com"
+
+# Set via: npx wrangler secret put RESEND_API_KEY
