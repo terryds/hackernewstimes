@@ -2,6 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Readability } from '@mozilla/readability'
 import { fetchComments, getDomain, timeAgo } from '../api'
 
+// Auto-link plain URLs that aren't already inside an <a> tag
+function autoLinkUrls(html) {
+  return html.replace(
+    /(?<![">])(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  )
+}
+
 // Domains known to block iframes — these go straight to reader mode
 const IFRAME_BLOCKLIST = [
   'substack.com',
@@ -209,8 +217,8 @@ export default function StoryModal({ story, onClose }) {
     <div className="p-4 md:p-6 overflow-hidden">
       {story.text && (
         <div
-          className="max-w-prose mb-6 font-body text-sm leading-relaxed text-ink-light border-b border-rule-light pb-4 prose-a:text-accent prose-a:underline"
-          dangerouslySetInnerHTML={{ __html: story.text }}
+          className="max-w-prose mb-6 font-body text-sm leading-relaxed text-ink-light border-b border-rule-light pb-4 prose-a:text-accent prose-a:underline prose-a:break-all"
+          dangerouslySetInnerHTML={{ __html: autoLinkUrls(story.text) }}
         />
       )}
 
