@@ -45,6 +45,16 @@ export default function Footer() {
               @terryds
             </a>
           </p>
+          <p>
+            <a
+              href="https://github.com/terryds/hackernewstimes"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:text-accent-hover underline decoration-rule-light underline-offset-2"
+            >
+              View on GitHub
+            </a>
+          </p>
           <p>Not affiliated with or endorsed by Y Combinator or Hacker News.</p>
           <p>All content is sourced from the public Hacker News API.</p>
         </div>
