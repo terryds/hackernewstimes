@@ -6,9 +6,9 @@ import { fetchComments, getDomain, timeAgo } from '../api'
 function autoLinkUrls(html) {
   // First decode HTML entities so URLs like https:&#x2F;&#x2F;... become https://...
   const decoded = html.replace(/&#x2F;/g, '/').replace(/&#x27;/g, "'").replace(/&amp;/g, '&')
-  // Then auto-link URLs that aren't already inside an <a> tag
+  // Auto-link URLs that aren't already inside an <a> tag's href attribute
   return decoded.replace(
-    /(?<!["'>])(https?:\/\/[^\s<]+)/g,
+    /(?<!href=")(https?:\/\/[^\s<"]+)/g,
     '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
   )
 }
@@ -223,7 +223,7 @@ export default function StoryModal({ story, onClose }) {
       {story.text && (
         <div className="mb-8 pb-8 border-b-2 border-rule">
           <div
-            className="max-w-2xl font-body text-base md:text-lg leading-relaxed text-ink prose-a:text-accent prose-a:underline prose-a:underline-offset-2 prose-a:break-all [&_p]:mb-4"
+            className="max-w-2xl font-body text-base md:text-lg leading-relaxed text-ink [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_a]:break-all [&_p]:mb-4"
             dangerouslySetInnerHTML={{ __html: autoLinkUrls(story.text) }}
           />
         </div>
